@@ -1,5 +1,5 @@
 {
-  "name": "pristupy-app-v1",
+  "name": "app-access-app-v1",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -14,7 +14,7 @@
     "test": "bun test"
   },
   "dependencies": {
-    "@lazurio/module-kit": "github:Lazurio/module-kit#v0.2.0"
+    "@lazurio/module-kit": "github:Lazurio/module-kit#v0.3.0"
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.15",
@@ -24,14 +24,15 @@
   "lazurio": {
     "runtime": {
       "schema_version": "lazurio.runtime.v1",
-      "id": "lazurioexampleorganization-pristupy-v1",
-      "title": "Přístupy",
+      "id": "lazurioexampleorganization-app-access-v1",
+      "title": "App access",
       "company": "LazurioExampleOrganization",
-      "module": "pristupy",
+      "module": "app-access",
       "surface": "internal",
       "dev_script": "dev",
       "tags": [
-        "pristupy"
+        "app-access",
+        "access"
       ],
       "listeners": [
         {
