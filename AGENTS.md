@@ -1,35 +1,47 @@
-# Přístupy — pravidla pro agenty
+# App access: rules for agents
 
-Modul `pristupy` Organizace `LazurioExampleOrganization`. Vznikl příkazem
-`lazurio module create` (stack `bun-service`) a od prvního commitu splňuje
-Lazurio Module Standard. Tak ho drž.
+Module `app-access` of `LazurioExampleOrganization`, created with
+`lazurio module create` (stack `bun-service`). It keeps the Lazurio Module
+Standard from its first commit; keep it that way. This Organization works in
+English.
+
+## What it is for
+
+It shows who came to the App through Lazurio and with which application role
+(application admin or application user, Lazurio decision 0231), read with
+`appAccess` of `@lazurio/module-kit`. It is the reference for other Modules
+and the page Alena and Bob open on Ring 0 to check the contract.
+
+- Read the answer only through `appAccess`, on the server, for every request.
+  Never read the gateway's headers yourself and never take a name or a role
+  from the browser.
+- `unknown` means no role. `local` means a request from inside the Environment.
+- Admin and user never stand alone: say "application admin" or "application
+  user", never just "admin", so nobody confuses them with the Organization
+  Admin.
 
 ## Scope
 
-- Tento repozitář je jeden Modul: `lazurio.module.json` v kořeni; App, pokud
-  ji Modul má, žije v `app/v<N>/`.
-- Slot, Teamy a přístupy drží `modules.manifest.json` root repa Organizace.
-  Jejich změna jde samostatným PR do root repa Organizace, ne sem.
-- Jeden Modul = jeden task worktree = jedna branch = jeden PR. Primární
-  checkout zůstává na `main`.
+- This repository is one Module: `lazurio.module.json` at the root; the App
+  lives in `app/v<N>/`.
+- The slot, Teams and access are held by `modules.manifest.json` of the
+  Organization's root repository; a change of them is a separate pull request
+  there, not here.
+- One task worktree, one branch, one pull request. The primary checkout stays
+  on `main`.
 
 ## Standard
 
-- `dev` spouští jeden proces serveru a nic jiného; build, data a migrace
-  patří do přípravy (`prepare:app`), kontrola připravenosti do
-  `check:prepared`.
-- Host a port čte App jen z `LAZURIO_RUNTIME_LISTENER_<ID>_HOST` a `_PORT`
-  (přes `@lazurio/module-kit`); bez nich skončí kódem 2. Port patří jen do
-  `lazurio.module.json`, do zdrojů App se nepíše.
-- Žádné `.env*` soubory, tajemství v repozitáři ani importy mimo tento
-  repozitář; sdílený kód jen jako verzovaná závislost.
-- Odchylka se opravuje v Modulu, ne výjimkou v Launchpadu.
+- `dev` starts one server process and nothing else.
+- Host and port come only from `LAZURIO_RUNTIME_LISTENER_<ID>_HOST` and `_PORT`
+  (through `@lazurio/module-kit`); without them the App exits with code 2. The
+  port belongs only in `lazurio.module.json`.
+- No `.env*` files, no secrets in the repository, no imports from outside it.
 
-## Ověření před PR
+## Before a pull request
 
 ```sh
-lazurio module setup <cesta k Modulu> --root <Lazurio root> --json
+lazurio module setup <path to the Module> --root <Lazurio root> --json
 ```
 
-Očekávaný stav je `current`. Příkazy App (`check`, `test`, ruční start)
-popisuje `README.md`.
+The expected state is `current`. `README.md` lists the App's commands.

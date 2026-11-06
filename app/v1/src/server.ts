@@ -22,7 +22,7 @@ try {
 }
 
 const hosts = new Set(allowedHosts(LISTENER));
-const routes = withHealth(handle, HEALTH_PATH);
+const routes = withHealth((request: Request) => handle(request), HEALTH_PATH);
 const server = Bun.serve({
   hostname: app.host,
   port: app.port,
