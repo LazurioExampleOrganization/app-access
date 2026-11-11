@@ -32,7 +32,9 @@ and the page Alena and Bob open on Ring 0 to check the contract.
 
 ## Standard
 
-- `dev` starts one server process and nothing else.
+- `dev` starts one server process and nothing else; `start` is the same one
+  process for a production host (root decision 0239, the Organization's apps
+  host), declared as `lazurio.runtime.start_script`.
 - Host and port come only from `LAZURIO_RUNTIME_LISTENER_<ID>_HOST` and `_PORT`
   (through `@lazurio/module-kit`); without them the App exits with code 2. The
   port belongs only in `lazurio.module.json`.

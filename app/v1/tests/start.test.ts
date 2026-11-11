@@ -4,7 +4,9 @@ import { dirname, resolve } from "node:path";
 import packageJson from "../package.json";
 
 // The start contract of the Lazurio Module Standard (kap. 4): the Launchpad
-// runs the `dev` script with only bun on PATH and the listener environment;
+// runs the `dev` script and a production host (root decision 0239, the
+// Organization's apps host) the `start` script, each with only bun on PATH and
+// the listener environment;
 // without it the App refuses to start, with it the declared health path
 // answers 200 directly (the probe does not follow redirects), a foreign Host is
 // refused and SIGTERM ends the App with exit 0.
@@ -16,45 +18,46 @@ const variable = `LAZURIO_RUNTIME_LISTENER_${entrypoint.id.toUpperCase().replace
 const baseEnv = { HOME: process.env.HOME ?? "", PATH: dirname(process.execPath) };
 const startTimeoutMs = 60_000;
 
-describe("start contract", () => {
-  test("refuses to start without the listener environment", () => {
-    const run = Bun.spawnSync([process.execPath, "run", runtime.dev_script], {
-      cwd: app,
-      env: baseEnv,
-      stdout: "pipe",
-      stderr: "pipe",
-    });
-    expect(run.exitCode).toBe(2);
-    expect(run.stderr.toString()).toContain(`${variable}_HOST`);
-  });
-
-  test(
-    "answers health with 200, refuses a foreign Host and exits 0 on SIGTERM",
-    async () => {
-      const port = await freePort();
-      const server = Bun.spawn([process.execPath, "run", runtime.dev_script], {
+for (const script of [runtime.dev_script, runtime.start_script])
+  describe(`start contract of ${script}`, () => {
+    test("refuses to start without the listener environment", () => {
+      const run = Bun.spawnSync([process.execPath, "run", script], {
         cwd: app,
-        env: { ...baseEnv, [`${variable}_HOST`]: "127.0.0.1", [`${variable}_PORT`]: `${port}` },
-        stdout: "ignore",
-        stderr: "inherit",
+        env: baseEnv,
+        stdout: "pipe",
+        stderr: "pipe",
       });
-      try {
-        const url = `http://127.0.0.1:${port}${entrypoint.health.path}`;
-        const health = await firstResponse(url, startTimeoutMs);
-        expect(health.status).toBe(200);
-        const foreign = await fetch(url, {
-          headers: { host: "foreign.invalid" },
-          redirect: "manual",
+      expect(run.exitCode).toBe(2);
+      expect(run.stderr.toString()).toContain(`${variable}_HOST`);
+    });
+
+    test(
+      "answers health with 200, refuses a foreign Host and exits 0 on SIGTERM",
+      async () => {
+        const port = await freePort();
+        const server = Bun.spawn([process.execPath, "run", script], {
+          cwd: app,
+          env: { ...baseEnv, [`${variable}_HOST`]: "127.0.0.1", [`${variable}_PORT`]: `${port}` },
+          stdout: "ignore",
+          stderr: "inherit",
         });
-        expect(foreign.status).toBe(403);
-      } finally {
-        server.kill("SIGTERM");
-      }
-      expect(await server.exited).toBe(0);
-    },
-    startTimeoutMs + 30_000,
-  );
-});
+        try {
+          const url = `http://127.0.0.1:${port}${entrypoint.health.path}`;
+          const health = await firstResponse(url, startTimeoutMs);
+          expect(health.status).toBe(200);
+          const foreign = await fetch(url, {
+            headers: { host: "foreign.invalid" },
+            redirect: "manual",
+          });
+          expect(foreign.status).toBe(403);
+        } finally {
+          server.kill("SIGTERM");
+        }
+        expect(await server.exited).toBe(0);
+      },
+      startTimeoutMs + 30_000,
+    );
+  });
 
 async function firstResponse(url: string, timeoutMs: number): Promise<Response> {
   const deadline = Date.now() + timeoutMs;
